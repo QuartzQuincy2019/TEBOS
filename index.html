@@ -7,14 +7,15 @@
     <script>
         //database.js
         const consonants = [
-            "ट", "ठ", "ढ", "ख", "थ", "घ", "ङ", "च", "छ", "फ",//0-9
-            "झ", "ञ", "र", "क", "ड", "स", "व", "त", "ग", "द",//10-19
-            "ध", "न", "प", "ज", "ब", "भ", "म", "य", "ल", "ण",//20-29
+            "ट", "ठ", "ड", "ख", "थ", "घ", "ङ", "च", "छ", "फ",//0-9
+            "झ", "ञ", "ढ", "त", "र", "ल", "व", "ज", "ग", "द",//10-19
+            "ध", "न", "प", "क", "ब", "भ", "म", "य", "स", "ण",//20-29
             "श", "ष"   // 32个辅音字母 (0-31)
         ];
         const diacritics = [
-            "ू", "ि", "ी", "ु", "े", "्", "ा" // 7附标 (0-6)
+            "ी", "ू", "ि", "ु", "े", "ा", "ौ", "ो"// 8附标 (0-7)
         ];
+        const separators = ["्"];
         const conMap = new Map(consonants.map((char, idx) => [char, idx]));
         const diaMap = new Map(diacritics.map((char, idx) => [char, idx]));
 
@@ -26,24 +27,6 @@
         diaMap.forEach((value, key) => {
             rev_dia.set(key, value);
         });
-        const byteSolutions = new Array(256).fill().map(() => []);
-        for (let byte = 0; byte < 256; byte++) {
-            const T = byte;
-            for (let A1 = 0; A1 <= 6; A1++) {
-                for (let C1 = 0; C1 <= 31; C1++) {
-                    const part1 = C1 * A1;
-                    for (let A2 = 0; A2 <= 6; A2++) {
-                        if (A2 == A1) continue;
-                        for (let C2 = 0; C2 <= 31; C2++) {
-                            if (C2 == C1) continue;
-                            if (part1 + C2 * A2 === T) {
-                                byteSolutions[byte].push([C1, A1, C2, A2]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
     </script>
     <script>
         /**
@@ -59,7 +42,43 @@
             }
             return result;
         }
-
+        Array.prototype.mixUp = function (indexes, element) {
+            const validIndexes = [...new Set(indexes)]
+                .filter(idx =>
+                    Number.isInteger(idx) &&
+                    idx >= 0 &&
+                    idx < this.length
+                );
+            validIndexes.sort((a, b) => b - a);
+            validIndexes.forEach(idx => {
+                this.splice(idx + 1, 0, element);
+            });
+            return this;
+        };
+        Array.prototype.deleteAll = function (element) {
+            for (let i = this.length - 1; i >= 0; i--) {
+                if (this[i] === element) {
+                    this.splice(i, 1);
+                }
+            }
+            return this;
+        };
+        function paveWay(arr, target) {
+            // 记录所有需要删除的索引位置
+            const indicesToDelete = new Set();
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] === target && i > 0) {
+                    if (arr[i - 1] !== target) {
+                        indicesToDelete.add(i - 1);
+                    }
+                }
+            }
+            const sortedIndices = Array.from(indicesToDelete).sort((a, b) => b - a);
+            for (const index of sortedIndices) {
+                arr.splice(index, 1);
+            }
+            return arr;
+        }
         /**
          * 
          * @param {array} bytes 给出UTF-8的编码：[228, 184, 173]，返回对应Unicode字符。
@@ -87,31 +106,47 @@
                 var char_result = [];
                 const bytes = getUTF8Bytes(char);
                 for (const byte of bytes) {
-                    const solutions = byteSolutions[byte];
-                    const [C1, A1, C2, A2] = solutions[Math.floor(Math.random() * solutions.length)];
-                    const char1 = consonants[C1] + diacritics[A1];
-                    const char2 = consonants[C2] + diacritics[A2];
-                    char_result.push(char1, char2);
+                    const char2 = diacritics[byte % 8];
+                    const char1 = consonants[(byte - byte % 8) / 8];
+                    const char = char1 + char2;
+                    // console.log(char);
+                    char_result.push(char1 + char2);
                 }
+                char_result.push(consonants[Math.floor(Math.random() * consonants.length)] + separators[0]);
                 cipher = char_result.join("");
+                // console.log(cipher);
                 ciphers.push(cipher);
             }
-            return ciphers.join(" ");
+            ciphers = ciphers.join("").split("");
+            // console.log(ciphers);
+            var lastSpace = 0;
+            var indexes = [];
+            for (var i = 0; i < ciphers.length; i++) {
+                if (i - lastSpace >= 6 && i % 2 == 1 && ciphers.length - i >= 6) {
+                    if (Math.random() >= 0.35) {
+                        indexes.push(i);
+                        lastSpace = i;
+                    }
+                }
+            }
+            ciphers.mixUp(indexes, " ");
+            return ciphers.join("");
         }
 
         function decrypt(ciphers) {
-            var ciphers_set = ciphers.split(" ");
+            var ciphers_set = ciphers.split("");
+            ciphers_set.deleteAll(" ");
+            ciphers_set = paveWay(ciphers_set, separators[0]);
+            ciphers_set = ciphers_set.join("").split(separators[0]);
             var plaintext = [];
             for (cipher of ciphers_set) {
                 var bytes = [];
                 var res = 0;
-                const units = splitIntoChunks(cipher, 4);
+                const units = splitIntoChunks(cipher, 2);
                 for (unit of units) {
                     let C1 = rev_con.get(unit[0]);
                     let A1 = rev_dia.get(unit[1]);
-                    let C2 = rev_con.get(unit[2]);
-                    let A2 = rev_dia.get(unit[3]);
-                    res = C1 * A1 + C2 * A2;
+                    res = C1 * 8 + A1;
                     bytes.push(res);
                 }
                 plaintext.push(getCharFromUTF8Bytes(bytes));
@@ -193,7 +228,7 @@
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
     <h3>Author: QuartzStudio2019(Quincy) - All Rights Reserved</h3>
     <p>装载Sanskrit Text字体，体验更佳。</p>
-    <h3>v1.2.2</h3>
+    <h3>v2.0.0</h3>
     <button title="切换色调" onclick="changeSkin();">切换色调</button>
     <p>经TEBOS加密后的密文是无意义但可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
             href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
