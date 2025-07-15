@@ -7,13 +7,13 @@
     <script>
         //database.js
         const consonants = [
-            "क", "ख", "ग", "घ", "ङ", "च", "छ", "ज", "झ", "ञ",
-            "ट", "ठ", "ड", "ढ", "ण", "त", "थ", "द", "ध", "न",
-            "प", "फ", "ब", "भ", "म", "य", "र", "ल", "व", "श",
-            "ष", "स"  // 32个辅音字母 (0-31)
+            "ट", "ठ", "ढ", "ख", "थ", "घ", "ङ", "च", "छ", "फ",//0-9
+            "झ", "ञ", "र", "क", "ड", "स", "व", "त", "ग", "द",//10-19
+            "ध", "न", "प", "ज", "ब", "भ", "म", "य", "ल", "ण",//20-29
+            "श", "ष"   // 32个辅音字母 (0-31)
         ];
         const diacritics = [
-            "े", "ि", "ी", "ु", "ू", "्", "ा"  // 7附标 (0-6)
+            "ू", "ि", "ी", "ु", "े", "्", "ा" // 7附标 (0-6)
         ];
         const conMap = new Map(consonants.map((char, idx) => [char, idx]));
         const diaMap = new Map(diacritics.map((char, idx) => [char, idx]));
@@ -33,6 +33,7 @@
                 for (let C1 = 0; C1 <= 31; C1++) {
                     const part1 = C1 * A1;
                     for (let A2 = 0; A2 <= 6; A2++) {
+                        if (A2 == A1) continue;
                         for (let C2 = 0; C2 <= 31; C2++) {
                             if (C2 == C1) continue;
                             if (part1 + C2 * A2 === T) {
@@ -119,49 +120,55 @@
         }
     </script>
     <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+        }
+
         body {
-            background-color: #000;
+            background-color: var(--bg-color);
+            color: var(--text-color);
         }
 
         * {
-            color: white;
             font-family: 'Times New Roman', Times, serif;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         textarea {
             box-sizing: border-box;
-            background-color: #000;
-            color: #fff;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             padding: 0.4em;
             min-width: 100%;
         }
 
         .input {
-            min-height: 6em;
-            font-size: 2em;
+            min-height: 8em;
+            font-size: 2.5em;
         }
 
         .results {
             box-sizing: border-box;
-            border: 4px solid #fff;
+            border: 4px solid var(--text-color);
             padding: 0.2em;
             border-radius: 10px;
             min-width: 100%;
             max-width: 100%;
-            font-size: 2em;
+            font-size: 2.5em;
             overflow-wrap: break-word;
         }
 
         .sanskrit {
-            font-family: 'Sanskrit Text';
+            font-family: 'Sanskrit Text', 'Times New Roman';
         }
 
         .plain.results {
-            min-height: 8em;
+            min-height: 10em;
         }
 
         .sanskrit.results {
-            min-height: 8em;
+            min-height: 10em;
         }
 
         button {
@@ -170,13 +177,28 @@
             padding: 0.4em;
             margin: 0.2em;
         }
+
+        a {
+            text-decoration: none;
+            font-weight: 1000;
+            color: #ff6ac1;
+        }
+
+        a:visited {
+            color: #ff6ac1;
+        }
     </style>
 </head>
 
 <body>
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
     <h3>Author: QuartzStudio2019(Quincy) - All Rights Reserved</h3>
-    <h3>v1.1.0</h3>
+    <p>装载Sanskrit Text字体，体验更佳。</p>
+    <h3>v1.2.0</h3>
+    <button title="切换色调" onclick="changeSkin();">切换色调</button>
+    <p>经TEBOS加密后的密文是无意义但可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
+            href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
+    <hr>
     <h1>解密 - Decrypt</h1>
     <textarea title="解密" id="decoding" class="sanskrit input"></textarea>
     <button title="复制" onclick="copyPlaintext();">复制明文</button>
@@ -198,6 +220,20 @@
         }
         function copyCipher() {
             navigator.clipboard.writeText(document.getElementById("cipher").value);
+        }
+    </script>
+    <script>
+        var skin = 'dark';
+        function changeSkin() {
+            if (skin == 'dark') {
+                document.documentElement.style.setProperty("--bg-color", "#ffffff");
+                document.documentElement.style.setProperty("--text-color", "#000000");
+                skin = 'light';
+            } else {
+                document.documentElement.style.setProperty("--bg-color", "#000000");
+                document.documentElement.style.setProperty("--text-color", "#ffffff");
+                skin = 'dark';
+            }
         }
     </script>
 </body>
