@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+    <title>Text Encrypter Based On Sanskrit - TEBOS</title>
+    <script>
+        //database.js
+        const consonants = [
+            "क", "ख", "ग", "घ", "ङ", "च", "छ", "ज", "झ", "ञ",
+            "ट", "ठ", "ड", "ढ", "ण", "त", "थ", "द", "ध", "न",
+            "प", "फ", "ब", "भ", "म", "य", "र", "ल", "व", "श",
+            "ष", "स"  // 32个辅音字母 (0-31)
+        ];
+        const diacritics = [
+            "े", "ि", "ी", "ु", "ू", "ा", "ै"  // 7个元音附标 (0-6)
+        ];
+        const conMap = new Map(consonants.map((char, idx) => [char, idx]));
+        const diaMap = new Map(diacritics.map((char, idx) => [char, idx]));
+
+        const rev_con = new Map();
+        conMap.forEach((value, key) => {
+            rev_con.set(key, value);
+        });
+        const rev_dia = new Map();
+        diaMap.forEach((value, key) => {
+            rev_dia.set(key, value);
+        });
+        const byteSolutions = new Array(256).fill().map(() => []);
+        for (let byte = 0; byte < 256; byte++) {
+            const T = byte;
+            for (let A1 = 0; A1 <= 6; A1++) {
+                for (let C1 = 0; C1 <= 31; C1++) {
+                    const part1 = C1 * A1;
+                    for (let A2 = 0; A2 <= 6; A2++) {
+                        for (let C2 = 0; C2 <= 31; C2++) {
+                            if (part1 + C2 * A2 === T) {
+                                byteSolutions[byte].push([C1, A1, C2, A2]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        /**
+         * 字符串分组
+         * @param {string} str "andyouare"
+         * @param {number} n 3
+         * @returns ["and","you","are"]
+         */
+        function splitIntoChunks(str, n) {
+            const result = [];
+            for (let i = 0; i < str.length; i += n) {
+                result.push(str.substring(i, i + n));
+            }
+            return result;
+        }
+
+        /**
+         * 
+         * @param {array} bytes 给出UTF-8的编码：[228, 184, 173]，返回对应Unicode字符。
+         * @returns 
+         */
+        function getCharFromUTF8Bytes(bytes) {
+            const decoder = new TextDecoder('utf-8');
+            return decoder.decode(new Uint8Array(bytes));
+        }
+
+        /**
+         * 
+         * @param {string} char 获取单个字符的UTF-8编码
+         * @returns 
+         */
+        function getUTF8Bytes(char) {
+            const encoder = new TextEncoder();
+            return Array.from(encoder.encode(char));
+        }
+
+        function encrypt(text) {
+            var ciphers = [];
+            for (const char of text) {
+                var cipher = "";
+                var char_result = [];
+                const bytes = getUTF8Bytes(char);
+                for (const byte of bytes) {
+                    const solutions = byteSolutions[byte];
+                    const [C1, A1, C2, A2] = solutions[Math.floor(Math.random() * solutions.length)];
+                    const char1 = consonants[C1] + diacritics[A1];
+                    const char2 = consonants[C2] + diacritics[A2];
+                    char_result.push(char1, char2);
+                }
+                cipher = char_result.join("");
+                ciphers.push(cipher);
+            }
+            return ciphers.join(" ");
+        }
+
+        function decrypt(ciphers) {
+            var ciphers_set = ciphers.split(" ");
+            var plaintext = [];
+            for (cipher of ciphers_set) {
+                var bytes = [];
+                var res = 0;
+                const units = splitIntoChunks(cipher, 4);
+                for (unit of units) {
+                    let C1 = rev_con.get(unit[0]);
+                    let A1 = rev_dia.get(unit[1]);
+                    let C2 = rev_con.get(unit[2]);
+                    let A2 = rev_dia.get(unit[3]);
+                    res = C1 * A1 + C2 * A2;
+                    bytes.push(res);
+                }
+                plaintext.push(getCharFromUTF8Bytes(bytes));
+            }
+            return plaintext.join("");
+        }
+    </script>
+    <style>
+        body {
+            background-color: #000;
+        }
+
+        * {
+            color: white;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        textarea {
+            box-sizing: border-box;
+            background-color: #000;
+            color: #fff;
+            padding: 0.4em;
+            min-width: 100%;
+            min-height: 5em;
+            font-size: 2.5em;
+        }
+
+        .results {
+            box-sizing: border-box;
+            border: 4px solid #fff;
+            padding: 0.2em;
+            border-radius: 10px;
+            font-size: 2em;
+            font-weight: 900;
+            min-width: 100%;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            min-height: fit-content;
+        }
+
+        .sanskrit {
+            font-family: 'Sanskrit Text';
+            font-weight: 100;
+            font-size: 3em;
+        }
+
+        .sanskrit.results {
+            min-height: 14em;
+        }
+
+        button {
+            color: #000;
+            font-size: 2em;
+            padding: 0.4em;
+            margin: 0.2em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
+    <h3>Author: QuartzStudio2019(Quincy) - All Rights Reserved</h3>
+    <h3>v1.0.0</h3>
+    <h1>解密 - Decrypt</h1>
+    <textarea title="解密" id="decoding" class="sanskrit"></textarea>
+    <button title="复制" onclick="copyPlaintext();">复制明文</button>
+    <textarea title="明文" id="plaintext" class="results" readonly>---明文---Plaintext---</textarea>
+    <hr>
+    <h1>加密 - Encrypt</h1>
+    <textarea title="加密" id="encoding"></textarea>
+    <button title="复制" onclick="copyCipher();">复制密文</button>
+    <textarea title="密文" id="cipher" class="results sanskrit" readonly>---密文---Cipher---</textarea>
+    <script>
+        document.getElementById("decoding").addEventListener("input", () => {
+            document.getElementById("plaintext").value = decrypt(document.getElementById("decoding").value);
+        });
+        document.getElementById("encoding").addEventListener("input", () => {
+            document.getElementById("cipher").value = encrypt(document.getElementById("encoding").value);
+        });
+        function copyPlaintext() {
+            navigator.clipboard.writeText(document.getElementById("plaintext").value);
+        }
+        function copyCipher() {
+            navigator.clipboard.writeText(document.getElementById("cipher").value);
+        }
+    </script>
+</body>
+
+</html>
