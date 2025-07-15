@@ -136,11 +136,12 @@
         }
 
         textarea {
+            display: block;
+            width: 100%;
             box-sizing: border-box;
             background-color: var(--bg-color);
             color: var(--text-color);
             padding: 0.4em;
-            min-width: 100%;
         }
 
         .input {
@@ -153,8 +154,6 @@
             border: 4px solid var(--text-color);
             padding: 0.2em;
             border-radius: 10px;
-            min-width: 100%;
-            max-width: 100%;
             font-size: 2.5em;
             overflow-wrap: break-word;
         }
@@ -194,7 +193,7 @@
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
     <h3>Author: QuartzStudio2019(Quincy) - All Rights Reserved</h3>
     <p>装载Sanskrit Text字体，体验更佳。</p>
-    <h3>v1.2.0</h3>
+    <h3>v1.2.2</h3>
     <button title="切换色调" onclick="changeSkin();">切换色调</button>
     <p>经TEBOS加密后的密文是无意义但可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
             href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
@@ -202,12 +201,12 @@
     <h1>解密 - Decrypt</h1>
     <textarea title="解密" id="decoding" class="sanskrit input"></textarea>
     <button title="复制" onclick="copyPlaintext();">复制明文</button>
-    <textarea title="明文" id="plaintext" class="results plain" readonly>---明文---Plaintext---</textarea>
+    <textarea title="明文" id="plaintext" class="results plain" readonly>---Plaintext---</textarea>
     <hr>
     <h1>加密 - Encrypt</h1>
     <textarea title="加密" id="encoding" class="plain input"></textarea>
     <button title="复制" onclick="copyCipher();">复制密文</button>
-    <textarea title="密文" id="cipher" class="results sanskrit" readonly>---密文---Cipher---</textarea>
+    <textarea title="密文" id="cipher" class="results sanskrit" readonly>---Cipher---</textarea>
     <script>
         document.getElementById("decoding").addEventListener("input", () => {
             document.getElementById("plaintext").value = decrypt(document.getElementById("decoding").value);
