@@ -98,8 +98,52 @@
             const encoder = new TextEncoder();
             return Array.from(encoder.encode(char));
         }
-
-        function encrypt(text) {
+        //Deva-B32p8加密系统
+        function Deva_B32p8(text) {
+            const encoder = new TextEncoder();
+            let binaryStr = encoder.encode(text);
+            var bytes = [...binaryStr];
+            bytes = bytes.map(byte => byte.toString(2).padStart(8, '0'));
+            var ciphers = [];
+            for (var i = 0; i < bytes.length; i++) {
+                let integer = parseInt(bytes[i], 2);
+                const char2 = diacritics[integer % 8];
+                const char1 = consonants[(integer - integer % 8) / 8];
+                const char = char1 + char2;
+                ciphers.push(char1 + char2);
+            }
+            var lastSpace = 0;
+            var indexes = [];
+            for (var i = 0; i < ciphers.length; i++) {
+                if (i - lastSpace >= 2 && ciphers.length - i >= 2) {
+                    if (Math.random() >= 0.4) {
+                        indexes.push(i);
+                        lastSpace = i;
+                    }
+                }
+            }
+            ciphers.mixUp(indexes, " ");
+            return ciphers.join("");
+        }
+        function de_B32p8(ciphers) {
+            ciphers = ciphers.split("");
+            ciphers.deleteAll(" ");
+            console.log(ciphers);
+            var u = new Array();
+            for (var i = 0; i < ciphers.length;) {
+                let C1 = rev_con.get(ciphers[i]);
+                let A1 = rev_dia.get(ciphers[i + 1]);
+                res = C1 * 8 + A1;
+                i += 2;
+                u.push(res);
+            }
+            console.log(u);
+            let decoder = new TextDecoder();
+            var bytes = new Uint8Array(u);
+            return decoder.decode(bytes);
+        }
+        //Deva_D32p8M加密系统
+        function Deva_D32p8M(text) {
             var ciphers = [];
             for (const char of text) {
                 var cipher = "";
@@ -114,15 +158,13 @@
                 }
                 char_result.push(consonants[Math.floor(Math.random() * consonants.length)] + separators[Math.floor(Math.random() * separators.length)]);
                 cipher = char_result.join("");
-                // console.log(cipher);
                 ciphers.push(cipher);
             }
             ciphers = ciphers.join("").split("");
-            // console.log(ciphers);
             var lastSpace = 0;
             var indexes = [];
             for (var i = 0; i < ciphers.length; i++) {
-                if (i - lastSpace >= 4 && i % 2 == 1 && ciphers.length - i >= 4) {
+                if (i - lastSpace >= 2 && i % 2 == 1 && ciphers.length - i >= 2) {
                     if (Math.random() >= 0.4) {
                         indexes.push(i);
                         lastSpace = i;
@@ -132,8 +174,7 @@
             ciphers.mixUp(indexes, " ");
             return ciphers.join("");
         }
-
-        function decrypt(ciphers) {
+        function de_D32p8M(ciphers) {
             var ciphers_set = ciphers.split("");
             ciphers_set.deleteAll(" ");
             ciphers_set = paveWay(ciphers_set, separators[0]);
@@ -156,6 +197,19 @@
                 plaintext.push(getCharFromUTF8Bytes(bytes));
             }
             return plaintext.join("");
+        }
+
+        var MODE = 'Deva-B32p8';
+        function encrypt(text, mode = 'Deva-B32p8') {
+            var ciphers = [];
+            if (mode == 'Deva-B32p8') ciphers = Deva_B32p8(text);
+            if (mode == 'Deva-D32p8M') ciphers = Deva_D32p8M(text);
+            return ciphers
+        }
+
+        function decrypt(ciphers, mode = 'Deva-B32p8') {
+            if (mode == 'Deva-B32p8') return de_B32p8(ciphers);
+            if (mode == 'Deva-D32p8M') return de_D32p8M(ciphers);
         }
     </script>
     <style>
@@ -216,6 +270,12 @@
             margin: 0.2em;
         }
 
+        form {
+            color: #63e115;
+            text-shadow: 1px 1px 0px #000;
+            font-size: 2em;
+        }
+
         a {
             text-decoration: none;
             font-weight: 1000;
@@ -232,10 +292,19 @@
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
     <h3>Author: QuartzStudio2019(Quincy) - All Rights Reserved</h3>
     <p>装载Sanskrit Text字体，体验更佳。</p>
-    <h3>v2.1.0</h3>
+    <h3>v3.0.0</h3>
     <button title="切换色调" onclick="changeSkin();">切换色调</button>
     <p>经TEBOS加密后的密文是无意义但可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
             href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
+    <h2>加密算法选择</h2>
+    <form id="AlgorithmSelection">
+        <input type="radio" id="Algo_B32p8" name="加密算法" value="Deva-B32p8" checked />
+        <label for="Algo_B32p8">Deva-B32p8</label>
+        <br>
+        <input type="radio" id="Algo_D32p8M" name="加密算法" value="Deva-D32p8M" />
+        <label for="Algo_D32p8M">Deva-D32p8M</label>
+    </form>
+    <p>Deva-B32p8：密文相对更短，计算更快，无掩码。Deva-D32p8M：密文相对更长，有掩码。两算法基本逻辑相同。</p>
     <hr>
     <h1>解密 - Decrypt</h1>
     <textarea title="解密" id="decoding" class="sanskrit input"></textarea>
@@ -247,11 +316,17 @@
     <button title="复制" onclick="copyCipher();">复制密文</button>
     <textarea title="密文" id="cipher" class="results sanskrit" readonly>---Cipher---</textarea>
     <script>
+        function de() {
+            document.getElementById("plaintext").value = decrypt(document.getElementById("decoding").value, MODE);
+        }
+        function en() {
+            document.getElementById("cipher").value = encrypt(document.getElementById("encoding").value, MODE);
+        }
         document.getElementById("decoding").addEventListener("input", () => {
-            document.getElementById("plaintext").value = decrypt(document.getElementById("decoding").value);
+            de();
         });
         document.getElementById("encoding").addEventListener("input", () => {
-            document.getElementById("cipher").value = encrypt(document.getElementById("encoding").value);
+            en();
         });
         function copyPlaintext() {
             navigator.clipboard.writeText(document.getElementById("plaintext").value);
@@ -273,6 +348,11 @@
                 skin = 'dark';
             }
         }
+        document.getElementById("AlgorithmSelection").addEventListener('change', () => {
+            if (document.getElementById("Algo_B32p8").checked === true) MODE = 'Deva-B32p8';
+            if (document.getElementById("Algo_D32p8M").checked === true) MODE = 'Deva-D32p8M';
+            de();en();
+        })
     </script>
 </body>
 
