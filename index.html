@@ -15,7 +15,7 @@
         const diacritics = [
             "ी", "ू", "ि", "ु", "े", "ा", "ौ", "ो"// 8附标 (0-7)
         ];
-        const separators = ["्"];
+        const separators = ["ृ", "्", "ै"];
         const conMap = new Map(consonants.map((char, idx) => [char, idx]));
         const diaMap = new Map(diacritics.map((char, idx) => [char, idx]));
 
@@ -112,7 +112,7 @@
                     // console.log(char);
                     char_result.push(char1 + char2);
                 }
-                char_result.push(consonants[Math.floor(Math.random() * consonants.length)] + separators[0]);
+                char_result.push(consonants[Math.floor(Math.random() * consonants.length)] + separators[Math.floor(Math.random() * separators.length)]);
                 cipher = char_result.join("");
                 // console.log(cipher);
                 ciphers.push(cipher);
@@ -122,8 +122,8 @@
             var lastSpace = 0;
             var indexes = [];
             for (var i = 0; i < ciphers.length; i++) {
-                if (i - lastSpace >= 6 && i % 2 == 1 && ciphers.length - i >= 6) {
-                    if (Math.random() >= 0.35) {
+                if (i - lastSpace >= 4 && i % 2 == 1 && ciphers.length - i >= 4) {
+                    if (Math.random() >= 0.4) {
                         indexes.push(i);
                         lastSpace = i;
                     }
@@ -137,7 +137,11 @@
             var ciphers_set = ciphers.split("");
             ciphers_set.deleteAll(" ");
             ciphers_set = paveWay(ciphers_set, separators[0]);
-            ciphers_set = ciphers_set.join("").split(separators[0]);
+            ciphers_set = paveWay(ciphers_set, separators[1]);
+            ciphers_set = paveWay(ciphers_set, separators[2]);
+            ciphers_set = ciphers_set.join("").split(separators[0])
+                .join("").split(separators[1])
+                .join("").split(separators[2]);
             var plaintext = [];
             for (cipher of ciphers_set) {
                 var bytes = [];
@@ -228,7 +232,7 @@
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
     <h3>Author: QuartzStudio2019(Quincy) - All Rights Reserved</h3>
     <p>装载Sanskrit Text字体，体验更佳。</p>
-    <h3>v2.0.0</h3>
+    <h3>v2.1.0</h3>
     <button title="切换色调" onclick="changeSkin();">切换色调</button>
     <p>经TEBOS加密后的密文是无意义但可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
             href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
