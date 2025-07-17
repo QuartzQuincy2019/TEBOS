@@ -29,19 +29,7 @@
         });
     </script>
     <script>
-        /**
-         * 字符串分组
-         * @param {string} str "andyouare"
-         * @param {number} n 3
-         * @returns ["and","you","are"]
-         */
-        function splitIntoChunks(str, n) {
-            const result = [];
-            for (let i = 0; i < str.length; i += n) {
-                result.push(str.substring(i, i + n));
-            }
-            return result;
-        }
+        //prototypes.js
         Array.prototype.mixUp = function (indexes, element) {
             const validIndexes = [...new Set(indexes)]
                 .filter(idx =>
@@ -63,6 +51,115 @@
             }
             return this;
         };
+        String.prototype.divideForward = function (identifiers) {
+            const idSet = new Set(identifiers);
+            const result = [];
+            let start = 0;
+            let current = 0;
+            while (current < this.length) {
+                if (idSet.has(this[current])) {
+                    result.push(this.slice(start, current + 1));
+                    start = current + 1;  // 更新起始位置
+                }
+                current++;
+            }
+            if (start < current) {
+                result.push(this.slice(start));
+            }
+
+            return result;
+        };
+    </script>
+    <script>
+        //进制转换。输入(2180,10)得到[0,8,1,2]。
+        function convertToBaseArray(num, base) {
+            if (num === 0) return [0];
+            const digits = [];
+            while (num > 0) {
+                const remainder = num % base;
+                digits.push(remainder);
+                num = Math.floor(num / base);
+            }
+            return digits;
+        }
+
+        function calculateK(blockSize) {
+            return Math.ceil(Math.log2(2 * blockSize));
+        }
+
+        /**
+         * PKCS7按位填充
+         * @param {string} bitString 二进制字符串（由'0'和'1'组成）
+         * @param {number} blockSize 块大小（位）
+         * @returns {string} 填充后的二进制字符串
+         */
+        function bitPKCS7Pad(bitString, blockSize) {
+            if (bitString=='') {
+                return '0'.repeat(blockSize);
+            };
+            if (blockSize < 1 || blockSize == undefined) throw new Error("Block size must be at least 1");
+            const len = bitString.length;
+            // 计算最小填充位数
+            const remainder = len % blockSize;
+            const P_min = remainder === 0 ? blockSize : blockSize - remainder;
+            const K = calculateK(blockSize);
+
+            // 确定总填充位数
+            let P_total = P_min;
+            if (P_min < K + 1) {
+                P_total = P_min + blockSize;
+            }
+
+            // 生成填充内容：前导0 + 总填充位数的二进制表示
+            const padZeros = '0'.repeat(P_total - K);
+            const padCount = P_total.toString(2).padStart(K, '0');
+            return bitString + padZeros + padCount;
+        }
+
+        /**
+         * PKCS7按位去填充
+         * @param {string} bitString 填充后的二进制字符串
+         * @param {number} blockSize 块大小（位）
+         * @returns {string} 原始二进制字符串
+         */
+        function bitPKCS7Unpad(bitString, blockSize) {
+            if (blockSize < 1) throw new Error("Block size must be at least 1");
+            const len = bitString.length;
+            const K = calculateK(blockSize);
+            // if (len < K) throw new Error("Bit string too short");
+
+            // 解析总填充位数
+            const padCountBits = bitString.substring(len - K);
+            const P_total = parseInt(padCountBits, 2);
+            // if (P_total < 1 || P_total > 2 * blockSize - 1) {
+            //     throw new Error("Invalid padding length");
+            // }
+            // if (len < P_total) throw new Error("Padding exceeds bit string length");
+
+            // 验证并移除填充位
+            const padStart = len - P_total;
+            const zeros = bitString.substring(padStart, padStart + P_total - K);
+            // if (!/^0*$/.test(zeros)) {
+            //     throw new Error("Non-zero bits in padding");
+            // }
+            return bitString.substring(0, padStart);
+        }
+
+
+
+        /**
+         * 字符串分组
+         * @param {string} str "andyouare"
+         * @param {number} n 3
+         * @returns ["and","you","are"]
+         */
+        function splitIntoChunks(str, n) {
+            const result = [];
+            for (let i = 0; i < str.length; i += n) {
+                result.push(str.substring(i, i + n));
+            }
+            return result;
+        }
         function paveWay(arr, target) {
             // 记录所有需要删除的索引位置
             const indicesToDelete = new Set();
@@ -97,6 +194,65 @@
         function getUTF8Bytes(char) {
             const encoder = new TextEncoder();
             return Array.from(encoder.encode(char));
+        }
+        //Deva-F40bN加密系统
+        function Deva_F40bN(text, N) {
+            const encoder = new TextEncoder();
+            let binaryStr = encoder.encode(text);// 1.编码字符
+            let bytes = [...binaryStr];
+            bytes = bytes.map((byte) => byte.toString(2).padStart(8, '0'));// 2.转化为二进制字符串数组
+            bytes = bitPKCS7Pad(bytes.join(""), N);// 3.&4. join和PKCS
+            let converted = splitIntoChunks(bytes, N);// 5.N分组
+            var ciphers = []
+            for (block of converted) {// 6.转换
+                let number = parseInt(block, 2);
+                let A = diacritics[number % 8];//元音
+                let arr = convertToBaseArray((number - number % 8) / 8, 32);//8倍数用32进制表示
+                let Cs = "";
+                for (var d = arr.length - 1; d >= 0; d--) {
+                    Cs += consonants[arr[d]];
+                    if (d != 0) {
+                        Cs += "्";
+                    }
+                }
+                let cipher = Cs + A;
+                ciphers.push(cipher, " ");
+            }
+            return ciphers.join("");
+        }
+        function de_F40bN(ciphers, N) {
+            // 6.逆转换
+            ciphers = ciphers.split("").deleteAll(" ").join("");
+            ciphers = ciphers.divideForward(diacritics);
+            var plaintext = [];
+            for (cipher of ciphers) {
+                const len = cipher.length;
+                var A = rev_dia.get(cipher[len - 1]);
+                var Cs = [];
+                Cs.push(rev_con.get(cipher[len - 2]));
+                for (i = 4; i <= len; i += 2) {
+                    if (len >= i) Cs.push(rev_con.get(cipher[len - i]));
+                }
+                // console.log(Cs);
+                //// if (len >= 16) Cs.push(rev_con.get(cipher[len - 16]));
+                let sum = 0;
+                for (var d = 0; d < Cs.length; d++) {
+                    sum += Cs[d] * Math.pow(32, d);
+                }
+                var number = sum * 8 + A;
+                number = number.toString(2).padStart(N, '0');//18位
+                plaintext.push(number);
+            }
+            //现在plaintext中是18位字符串数组
+            plaintext = plaintext.join("");
+            //现在plaintext是一个长度为18整数倍的二进制字符串
+            plaintext = bitPKCS7Unpad(plaintext, N);
+            plaintext = splitIntoChunks(plaintext, 8);
+            //现在plaintext被分割为8位的二进制字符串
+            plaintext = plaintext.map(cipher => parseInt(cipher, 2));
+            var uarr = new Uint8Array(plaintext);
+            let decoder = new TextDecoder();
+            return decoder.decode(uarr);
         }
         //Deva-B32p8加密系统
         function Deva_B32p8(text) {
@@ -199,15 +355,19 @@
             return plaintext.join("");
         }
 
-        var MODE = 'Deva-B32p8';
-        function encrypt(text, mode = 'Deva-B32p8') {
+        var MODE = 'Deva-F40b18';
+        function encrypt(text, mode = 'Deva-F40b18') {
             var ciphers = [];
+            if (mode == 'Deva-F40b18') ciphers = Deva_F40bN(text, 18);
+            if (mode == 'Deva-F40b38') ciphers = Deva_F40bN(text, 38);
             if (mode == 'Deva-B32p8') ciphers = Deva_B32p8(text);
             if (mode == 'Deva-D32p8M') ciphers = Deva_D32p8M(text);
             return ciphers
         }
 
-        function decrypt(ciphers, mode = 'Deva-B32p8') {
+        function decrypt(ciphers, mode = 'Deva-F40b18') {
+            if (mode == 'Deva-F40b18') return de_F40bN(ciphers, 18);
+            if (mode == 'Deva-F40b38') return de_F40bN(ciphers, 38);
             if (mode == 'Deva-B32p8') return de_B32p8(ciphers);
             if (mode == 'Deva-D32p8M') return de_D32p8M(ciphers);
         }
@@ -292,19 +452,26 @@
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
     <h3>Author: QuartzStudio2019(Quincy) - All Rights Reserved</h3>
     <p>装载Sanskrit Text字体，体验更佳。</p>
-    <h3>v3.0.0</h3>
+    <h3>v4.0.0</h3>
     <button title="切换色调" onclick="changeSkin();">切换色调</button>
     <p>经TEBOS加密后的密文是无意义但可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
             href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
     <h2>加密算法选择</h2>
     <form id="AlgorithmSelection">
-        <input type="radio" id="Algo_B32p8" name="加密算法" value="Deva-B32p8" checked />
+        <input type="radio" id="Algo_F40b18" name="加密算法" value="Deva-F40b18" checked />
+        <label for="Algo_F40b18">Deva-F40b18</label>
+        <br>
+        <input type="radio" id="Algo_F40b38" name="加密算法" value="Deva-F40b38" />
+        <label for="Algo_F40b38">Deva-F40b38</label>
+        <br>
+        <input type="radio" id="Algo_B32p8" name="加密算法" value="Deva-B32p8" />
         <label for="Algo_B32p8">Deva-B32p8</label>
         <br>
         <input type="radio" id="Algo_D32p8M" name="加密算法" value="Deva-D32p8M" />
         <label for="Algo_D32p8M">Deva-D32p8M</label>
     </form>
-    <p>Deva-B32p8：密文相对更短，计算更快，无掩码。Deva-D32p8M：密文相对更长，有掩码。两算法基本逻辑相同。</p>
+    <p>Deva-F40b18：信息更密集，无掩码。Deva-F40b38：计算更慢，密文相对更短，无掩码。两算法以32*8进制进行加密，逻辑相同。</p>
+    <p>Deva-B32p8：信息不密集，计算更快，无掩码。Deva-D32p8M：密文相对更长，有掩码。两算法基本逻辑相同。</p>
     <hr>
     <h1>解密 - Decrypt</h1>
     <textarea title="解密" id="decoding" class="sanskrit input"></textarea>
@@ -349,9 +516,11 @@
             }
         }
         document.getElementById("AlgorithmSelection").addEventListener('change', () => {
+            if (document.getElementById("Algo_F40b18").checked === true) MODE = 'Deva-F40b18';
+            if (document.getElementById("Algo_F40b38").checked === true) MODE = 'Deva-F40b38';
             if (document.getElementById("Algo_B32p8").checked === true) MODE = 'Deva-B32p8';
             if (document.getElementById("Algo_D32p8M").checked === true) MODE = 'Deva-D32p8M';
-            de();en();
+            de(); en();
         })
     </script>
 </body>
