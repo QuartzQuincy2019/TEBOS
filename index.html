@@ -12,12 +12,64 @@
             "ध", "न", "प", "क", "ब", "भ", "म", "य", "स", "ण",//20-29
             "श", "ष"   // 32个辅音字母 (0-31)
         ];
+        var extended = [
+            //二叠字
+            "ट्ट", "ट्ठ", "ट्ख", "ट्च", "ट्छ", "ट्फ", "ट्त", "ट्व", "ट्प", "ट्क", "ट्म", "ट्स", "ट्ण", "ट्श", "ट्ष",
+            "ठ्ठ",
+            "ड्ड", "ड्घ", "ड्ढ", "ड्ल", "ड्व", "ड्ज", "ड्ग", "ड्द", "ड्ध", "ड्ब", "ड्भ", "ड्म",
+            "ङ्ख", "ङ्घ", "ङ्ङ", "ङ्च", "ङ्त", "ङ्व", "ङ्ज", "ङ्ग", "ङ्द", "ङ्ध", "ङ्न", "ङ्प", "ङ्क", "ङ्भ", "ङ्म", "ङ्स", "ङ्श",
+            "च्ञ", "छ्व",
+            "ञ्च", "ञ्ञ", "ञ्ज",
+            "ढ्ढ", "ढ्व",
+            "व्न",
+            "ज्ञ",
+            "द्घ", "द्व", "द्ग", "द्द", "द्ध", "द्न", "द्ब", "द्भ", "द्म", "द्य",
+            "ध्न",
+            "न्न",
+            "प्ट", "प्त", "प्न",
+            "क्त", "क्व", "क्न", "क्क", "क्ष",
+            "ब्न",
+            "भ्न",
+            "म्न",
+            "श्च", "श्व", "श्न",
+            "ष्ट", "ष्ठ",
+            //二叠音+r
+            "ट्ट्र", "ट्ठ्र", "ट्छ्र", "ट्त्र", "ट्र्र", "ट्प्र", "ट्क्र", "ट्श्र",
+            "ठ्ठ्र", "ठ्र्र",
+            "ड्ड्र", "ड्घ्र", "ड्ढ्र", "ड्र्र", "ड्ग्र", "ड्ब्र", "ड्भ्र",
+            "ङ्घ्र", "ङ्ङ्र", "ङ्त्र", "ङ्र्र", "ङ्व्र", "ङ्ग्र", "ङ्न्र", "ङ्क्र",
+            "छ्र्र",
+            "ढ्ढ्र", "ढ्र्र",
+            "द्घ्र", "द्व्र", "द्ग्र", "द्द्र", "द्ध्र", "द्ब्र", "द्भ्र",
+            "न्त्र",
+            "प्ट्र", "प्त्र",
+            "क्त्र", "क्क्र", "क्ष्र",
+            "ष्ट्र", "ष्ठ्र"
+        ];
+        for (var i = 0; i < consonants.length; i++) {
+            extended.push(consonants[i] + "्" + "र");//  Xr  辅音
+            //看上去很窄的辅音
+            extended.push("त" + "्" + consonants[i]);//  tX  辅音
+            extended.push("ग" + "्" + consonants[i]);//  gX  辅音
+            extended.push("न" + "्" + consonants[i]);//  nX  辅音
+            extended.push("य" + "्" + consonants[i]);//  nX  辅音
+        }
+        {
+            let temp = [];
+            for (var i = 0; i < extended.length; i++) {
+                temp.push("र" + "्" + extended[i]);// rX(n) 輔音
+            }
+            extended = extended.concat(temp);
+        }
+        extended = [...(new Set(extended))];//最小长度：512
+        const magnas = consonants.concat(extended);
         const diacritics = [
             "ी", "ू", "ि", "ु", "े", "ा", "ौ", "ो"// 8附标 (0-7)
         ];
         const separators = ["ृ", "्", "ै"];
         const conMap = new Map(consonants.map((char, idx) => [char, idx]));
         const diaMap = new Map(diacritics.map((char, idx) => [char, idx]));
+        const magMap = new Map(magnas.map((char, idx) => [char, idx]));
 
         const rev_con = new Map();
         conMap.forEach((value, key) => {
@@ -26,6 +78,10 @@
         const rev_dia = new Map();
         diaMap.forEach((value, key) => {
             rev_dia.set(key, value);
+        });
+        const rev_mag = new Map();
+        magMap.forEach((value, key) => {
+            rev_mag.set(key, value);
         });
         var simplified_C = [];
         for (var i = 0; i < 26; i++) {
@@ -42,6 +98,30 @@
         simMap.forEach((value, key) => {
             rev_sim.set(key, value);
         });
+
+        /**
+         * G代编码
+         * number应为12位（范围 0 ~ 4095）
+         */
+        function GEncode(binaryString) {
+            if (binaryString.length != 12) return;
+            const A = parseInt(binaryString.slice(9, 12), 2);
+            const C = parseInt(binaryString.slice(0, 9), 2);
+            const codeA = diacritics[A];
+            const codeC = magnas[C];
+            return codeC + codeA;
+        }
+        function GDecode(cipher) {
+            const codeA = cipher.charAt(cipher.length - 1);
+            const codeC = cipher.slice(0, cipher.length - 1);
+            const A = rev_dia.get(codeA).toString(2).padStart(3, '0');
+            const C = rev_mag.get(codeC).toString(2).padStart(9, '0');
+            return C + A;
+        }
+
+
+
+
     </script>
     <script>
         //prototypes.js
@@ -210,6 +290,31 @@
             const encoder = new TextEncoder();
             return Array.from(encoder.encode(char));
         }
+        //Deva-Mb12E加密系统
+        function Deva_Mb12E(text) {
+            const encoder = new TextEncoder();
+            let binaryStr = encoder.encode(text);
+            let bytes = [...binaryStr];
+            bytes = bytes.map((byte) => byte.toString(2).padStart(8, '0'));
+            bytes = bitPKCS7Pad(bytes.join(""), 12);
+            let converted = splitIntoChunks(bytes, 12);
+            var ciphers = [];
+            for (block of converted) {
+                ciphers.push(GEncode(block));
+            }
+            return ciphers.join("");
+        }
+        function de_Mb12E(ciphers) {
+            ciphers = ciphers.divideForward(diacritics);
+            ciphers = ciphers.map(cipher => GDecode(cipher));
+            ciphers = ciphers.join("");
+            var plaintext = bitPKCS7Unpad(ciphers, 12);
+            plaintext = splitIntoChunks(plaintext, 8);
+            plaintext = plaintext.map(byte => parseInt(byte, 2));
+            var uarr = new Uint8Array(plaintext);
+            let decoder = new TextDecoder();
+            return decoder.decode(uarr);
+        }
         //Latin-SbN加密系统
         const Latin_SbN_base = 512;
         function Latin_SbN(text, N) {
@@ -220,7 +325,7 @@
             bytes = bytes.map((byte) => byte.toString(2).padStart(8, '0'));
             bytes = bitPKCS7Pad(bytes.join(""), N);
             let converted = splitIntoChunks(bytes, N);
-            var ciphers = []
+            var ciphers = [];
             for (block of converted) {
                 let number = parseInt(block, 2);
                 let arr = convertToBaseArray(number, Latin_SbN_base);
@@ -242,7 +347,7 @@
                 for (C of cipher) {
                     Cs.push(rev_sim.get(C));
                 }//此时Cs从高位到低位
-                Cs=Cs.reverse();
+                Cs = Cs.reverse();
                 let sum = 0;
                 for (var d = 0; d < Cs.length; d++) {
                     sum += Cs[d] * Math.pow(Latin_SbN_base, d);
@@ -420,23 +525,25 @@
             return plaintext.join("");
         }
 
-        var MODE = 'Deva-F40b18';
-        function encrypt(text, mode = 'Deva-F40b18') {
+        var MODE = 'Deva-Mb12E';
+        function encrypt(text, mode = 'Deva-Mb12E') {
             var ciphers = [];
+            if (mode == 'Deva-Mb12E') ciphers = Deva_Mb12E(text);
             if (mode == 'Deva-F40b18') ciphers = Deva_F40bN(text, 18);
             if (mode == 'Deva-F40b38') ciphers = Deva_F40bN(text, 38);
             if (mode == 'Deva-B32p8') ciphers = Deva_B32p8(text);
             if (mode == 'Deva-D32p8M') ciphers = Deva_D32p8M(text);
-            if (mode == 'Latin-Sb32B512') ciphers = Latin_SbN(text,32);
+            if (mode == 'Latin-Sb32B512') ciphers = Latin_SbN(text, 32);
             return ciphers
         }
 
-        function decrypt(ciphers, mode = 'Deva-F40b18') {
+        function decrypt(ciphers, mode = 'Deva-Mb12E') {
+            if (mode == 'Deva-Mb12E') return de_Mb12E(ciphers);
             if (mode == 'Deva-F40b18') return de_F40bN(ciphers, 18);
             if (mode == 'Deva-F40b38') return de_F40bN(ciphers, 38);
             if (mode == 'Deva-B32p8') return de_B32p8(ciphers);
             if (mode == 'Deva-D32p8M') return de_D32p8M(ciphers);
-            if (mode == 'Latin-Sb32B512') return de_SbN(ciphers,32);
+            if (mode == 'Latin-Sb32B512') return de_SbN(ciphers, 32);
         }
     </script>
     <style>
@@ -462,11 +569,12 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             padding: 0.4em;
+            font-family: 'Sanskrit Text','Times New Roman', Times, serif;
         }
 
         .input {
             min-height: 8em;
-            font-size: 2.5em;
+            font-size: 2.2em;
         }
 
         .results {
@@ -474,7 +582,7 @@
             border: 4px solid var(--text-color);
             padding: 0.2em;
             border-radius: 10px;
-            font-size: 2.5em;
+            font-size: 2.2em;
             overflow-wrap: break-word;
         }
 
@@ -492,7 +600,7 @@
 
         button {
             color: #000;
-            font-size: 2em;
+            font-size: 1.8em;
             padding: 0.4em;
             margin: 0.2em;
         }
@@ -501,6 +609,11 @@
             color: #63e115;
             text-shadow: 1px 1px 0px #000;
             font-size: 2em;
+        }
+
+        form .recommended{
+            color: #efae16;
+            text-shadow: 1px 1px 0px #ff7d78, -1px -1px 1px #cccccc;
         }
 
         a {
@@ -517,15 +630,21 @@
 
 <body>
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
-    <h3>Author: QuartzStudio2019(Quincy) - All Rights Reserved</h3>
-    <p>装载Sanskrit Text字体，体验更佳。</p>
-    <h3>v4.1.0</h3>
+    <h3>Author: QuartzStudio2019(Quincy K.) &copy;2019-2025 - All Rights Reserved</h3>
+    <p>设备须支持天城文(Devanagari)显示。若装载Sanskrit Text字体，体验更佳。</p>
+    <h3>v5.0.0</h3>
     <button title="切换色调" onclick="changeSkin();">切换色调</button>
     <p>经TEBOS加密后的密文是无意义但可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
             href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
     <h2>加密算法选择</h2>
     <form id="AlgorithmSelection">
-        <input type="radio" id="Algo_F40b18" name="加密算法" value="Deva-F40b18" checked />
+        <input type="radio" id="Algo_Mb12E" name="加密算法" value="Deva-Mb12E" checked />
+        <label for="Algo_Mb12E" class="recommended">Deva-Mb12E</label>
+        <br>
+        <input type="radio" id="Algo_Sb32B512" name="加密算法" value="Latin-Sb32B512" />
+        <label for="Algo_Sb32B512">Latin-Sb32B512</label>
+        <br>
+        <input type="radio" id="Algo_F40b18" name="加密算法" value="Deva-F40b18" />
         <label for="Algo_F40b18">Deva-F40b18</label>
         <br>
         <input type="radio" id="Algo_F40b38" name="加密算法" value="Deva-F40b38" />
@@ -536,13 +655,11 @@
         <br>
         <input type="radio" id="Algo_D32p8M" name="加密算法" value="Deva-D32p8M" />
         <label for="Algo_D32p8M">Deva-D32p8M</label>
-        <br>
-        <input type="radio" id="Algo_Sb32B512" name="加密算法" value="Latin-Sb32B512" />
-        <label for="Algo_Sb32B512">Latin-Sb32B512</label>
     </form>
+    <p>Deva-Mb12E：信息最密集，极限压缩，密文最短。12位、8进制、超大映射加密，无掩码，计算较快。</p>
+    <p>Latin-Sb32B512：信息更密集，密文很短。32位、512进制超大映射加密，无掩码，计算较慢。</p>
     <p>Deva-F40b18：信息更密集，无掩码。Deva-F40b38：计算更慢，密文相对更短，无掩码。两算法以32*8进制进行加密，逻辑相同。</p>
     <p>Deva-B32p8：信息不密集，计算更快，无掩码。Deva-D32p8M：密文相对更长，有掩码。两算法基本逻辑相同。</p>
-    <p>Latin-Sb32B512：信息更密集，32位、512进制加密，无掩码。</p>
     <hr>
     <h1>解密 - Decrypt</h1>
     <textarea title="解密" id="decoding" class="sanskrit input"></textarea>
@@ -587,6 +704,7 @@
             }
         }
         document.getElementById("AlgorithmSelection").addEventListener('change', () => {
+            if (document.getElementById("Algo_Mb12E").checked === true) MODE = 'Deva-Mb12E';
             if (document.getElementById("Algo_F40b18").checked === true) MODE = 'Deva-F40b18';
             if (document.getElementById("Algo_F40b38").checked === true) MODE = 'Deva-F40b38';
             if (document.getElementById("Algo_B32p8").checked === true) MODE = 'Deva-B32p8';
