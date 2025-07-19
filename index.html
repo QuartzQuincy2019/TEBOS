@@ -550,6 +550,81 @@
         :root {
             --bg-color: #000000;
             --text-color: #ffffff;
+            --bg-color1: #666666;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .content_1 {
+            flex: 1;
+            /* 等分剩余空间 */
+            min-height: 200px;
+            /* 最小高度 */
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+        }
+
+        table {
+            width: auto;
+            min-width: 800px;
+            text-align: center;
+            border-collapse: collapse;
+            font-size: 1.4rem;
+            margin: 4px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        th {
+            padding: 18px 16px;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* 表格内容 */
+        tbody tr {
+            border-bottom: 1px solid #f0f3f5;
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px #0000000d;
+        }
+
+        td {
+            padding: 16px;
+            color: var(--text-color);
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--bg-color);
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: var(--bg-color1);
         }
 
         body {
@@ -569,12 +644,12 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             padding: 0.4em;
-            font-family: 'Sanskrit Text','Times New Roman', Times, serif;
+            font-family: 'Sanskrit Text', 'Times New Roman', Times, serif;
         }
 
         .input {
             min-height: 8em;
-            font-size: 2.2em;
+            font-size: 1.8em;
         }
 
         .results {
@@ -582,7 +657,7 @@
             border: 4px solid var(--text-color);
             padding: 0.2em;
             border-radius: 10px;
-            font-size: 2.2em;
+            font-size: 1.8em;
             overflow-wrap: break-word;
         }
 
@@ -611,7 +686,7 @@
             font-size: 2em;
         }
 
-        form .recommended{
+        form .recommended {
             color: #efae16;
             text-shadow: 1px 1px 0px #ff7d78, -1px -1px 1px #cccccc;
         }
@@ -630,10 +705,11 @@
 
 <body>
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
-    <h3>Author: QuartzStudio2019(Quincy K.) &copy;2019-2025 - All Rights Reserved</h3>
+    <h2>Author: QuartzStudio2019(Quincy K.) &copy;2019-2025 - All Rights Reserved</h2>
     <p>设备须支持天城文(Devanagari)显示。若装载Sanskrit Text字体，体验更佳。</p>
-    <h3>v5.0.0</h3>
-    <button title="切换色调" onclick="changeSkin();">切换色调</button>
+    <h2>v5.1.0</h2>
+    <button title="切换色调" onclick="changeSkin();">切换页面色调</button>
+    <h2>读音查询</h2>
     <p>经TEBOS加密后的密文是无意义但可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
             href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
     <h2>加密算法选择</h2>
@@ -656,20 +732,92 @@
         <input type="radio" id="Algo_D32p8M" name="加密算法" value="Deva-D32p8M" />
         <label for="Algo_D32p8M">Deva-D32p8M</label>
     </form>
-    <p>Deva-Mb12E：信息最密集，极限压缩，密文最短。12位、8进制、超大映射加密，无掩码，计算较快。</p>
-    <p>Latin-Sb32B512：信息更密集，密文很短。32位、512进制超大映射加密，无掩码，计算较慢。</p>
-    <p>Deva-F40b18：信息更密集，无掩码。Deva-F40b38：计算更慢，密文相对更短，无掩码。两算法以32*8进制进行加密，逻辑相同。</p>
-    <p>Deva-B32p8：信息不密集，计算更快，无掩码。Deva-D32p8M：密文相对更长，有掩码。两算法基本逻辑相同。</p>
     <hr>
-    <h1>解密 - Decrypt</h1>
-    <textarea title="解密" id="decoding" class="sanskrit input"></textarea>
-    <button title="复制" onclick="copyPlaintext();">复制明文</button>
-    <textarea title="明文" id="plaintext" class="results plain" readonly>---Plaintext---</textarea>
-    <hr>
-    <h1>加密 - Encrypt</h1>
-    <textarea title="加密" id="encoding" class="plain input"></textarea>
-    <button title="复制" onclick="copyCipher();">复制密文</button>
-    <textarea title="密文" id="cipher" class="results sanskrit" readonly>---Cipher---</textarea>
+    <div class="container">
+        <div class="content_1">
+            <h1>解密 - Decrypt</h1>
+            <textarea title="解密" id="decoding" class="sanskrit input"></textarea>
+            <button title="复制" onclick="copyPlaintext();">复制明文</button>
+            <textarea title="明文" id="plaintext" class="results plain" readonly>---Plaintext---</textarea>
+        </div>
+        <div class="content_1">
+            <h1>加密 - Encrypt</h1>
+            <textarea title="加密" id="encoding" class="plain input"></textarea>
+            <button title="复制" onclick="copyCipher();">复制密文</button>
+            <textarea title="密文" id="cipher" class="results sanskrit" readonly>---Cipher---</textarea>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>算法名</th>
+                    <th>Deva-Mb12E</th>
+                    <th>Latin-Sb32B512</th>
+                    <th>Deva-F40b18</th>
+                    <th>Deva-F40b38</th>
+                    <th>Deva-B32p8</th>
+                    <th>Deva-D32p8M</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>视觉长度</td>
+                    <td>短</td>
+                    <td>中</td>
+                    <td>中</td>
+                    <td>中</td>
+                    <td>中</td>
+                    <td>长</td>
+                </tr>
+                <tr>
+                    <td>实际长度</td>
+                    <td>长</td>
+                    <td>短</td>
+                    <td>长</td>
+                    <td>长</td>
+                    <td>长</td>
+                    <td>长</td>
+                </tr>
+                <tr>
+                    <td>位数</td>
+                    <td>12</td>
+                    <td>32</td>
+                    <td>18</td>
+                    <td>38</td>
+                    <td>8</td>
+                    <td>8</td>
+                </tr>
+                <tr>
+                    <td>计算速度</td>
+                    <td>快</td>
+                    <td>慢</td>
+                    <td>中</td>
+                    <td>慢</td>
+                    <td>快</td>
+                    <td>快</td>
+                </tr>
+                <tr>
+                    <td>映射大小</td>
+                    <td>大</td>
+                    <td>大</td>
+                    <td>小</td>
+                    <td>小</td>
+                    <td>小</td>
+                    <td>小</td>
+                </tr>
+                <tr>
+                    <td>掩码</td>
+                    <td>无</td>
+                    <td>无</td>
+                    <td>无</td>
+                    <td>无</td>
+                    <td>无</td>
+                    <td>有</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     <script>
         function de() {
             document.getElementById("plaintext").value = decrypt(document.getElementById("decoding").value, MODE);
@@ -691,18 +839,48 @@
         }
     </script>
     <script>
-        var skin = 'dark';
+        var skin = 'light';//设置默认皮肤
+        var themeDark = new Map([
+            ["--bg-color", "#000000"],
+            ["--text-color", "#ffffff"],
+            ["--bg-color1", "#666666"]
+        ]);
+        var themeLight_arr = ["#ffffff", "#000000", "#d2e8ff"];
+        var themeYellow_arr = ["#fff8b6", "#a35e00", "#f4e667"];
+        var themeLight = new Map();
+        var themeYellow = new Map();
+        {
+            let i = 0;
+            for (property of themeDark) {
+                themeLight.set(property[0], themeLight_arr[i]);
+                themeYellow.set(property[0], themeYellow_arr[i]);
+                i++;
+            }
+        }
+        var themes = new Map([
+            ["dark", themeDark],
+            ["light", themeLight],
+            ["yellow", themeYellow]
+        ])
+        function applySkin(themeName) {
+            const targetTheme = themes.get(themeName);
+            for (property of targetTheme) {
+                document.documentElement.style.setProperty(property[0], targetTheme.get(property[0]));
+            }
+        }
         function changeSkin() {
             if (skin == 'dark') {
-                document.documentElement.style.setProperty("--bg-color", "#ffffff");
-                document.documentElement.style.setProperty("--text-color", "#000000");
+                applySkin('light');
                 skin = 'light';
+            } else if (skin == 'light') {
+                applySkin('yellow');
+                skin = 'yellow';
             } else {
-                document.documentElement.style.setProperty("--bg-color", "#000000");
-                document.documentElement.style.setProperty("--text-color", "#ffffff");
+                applySkin('dark');
                 skin = 'dark';
             }
         }
+        applySkin(skin);//展示默认皮肤
         document.getElementById("AlgorithmSelection").addEventListener('change', () => {
             if (document.getElementById("Algo_Mb12E").checked === true) MODE = 'Deva-Mb12E';
             if (document.getElementById("Algo_F40b18").checked === true) MODE = 'Deva-F40b18';
