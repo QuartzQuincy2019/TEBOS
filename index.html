@@ -574,6 +574,14 @@
             src: url(./fonts/Shobhika/Shobhika-Regular.otf) format('opentype');
         }
 
+        * {
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        p {
+            font-size: 20px;
+        }
+
         .container {
             display: flex;
             flex-direction: column;
@@ -641,11 +649,6 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-        }
-
-        * {
-            font-family: 'Times New Roman', Times, serif;
-            transition: background-color 0.3s, color 0.3s;
         }
 
         textarea {
@@ -732,6 +735,7 @@
             padding: 5px;
             background-color: #f0f0f0;
             color: #000000;
+            text-shadow: none;
             border: #f0f0f0 1px;
             border-radius: 8px;
             font-family: 'Courier New', Courier, monospace;
@@ -775,34 +779,41 @@
                 grid-template-columns: repeat(8, 12.5%);
             }
         }
+
+        .BoldRed {
+            color: #ff0000;
+            text-shadow: 1px 1px 0 #000000;
+            font-weight: 900;
+        }
     </style>
 </head>
 
 <body>
     <h1>Text Encrypter Based On Sanskrit - TEBOS</h1>
     <h2>基于天城文的文字加密器 - TEBOS</h2>
-    <h3><span style="float: right;">v6.2.0</span>Author: <a title="仓库主页"
+    <h3><span style="float: right;">v6.2.1</span>Author: <a title="仓库主页"
             href="https://github.com/QuartzQuincy2019/TEBOS/">QuartzQuincy2019 (Quincy K.)</a></h3>
-    <h2>适配性说明</h2>
-    <p>设备须支持天城文(Devanagari)显示。各大主流电子设备、浏览器均支持天城文显示。</p>
-    <p>项目默认配备了<span class="emphasis">Shobhika</span>字体，以支持大量天城文叠字显示。在线使用、下载到计算机均可正常使用该字体。若下载到手机，则该字体将无法正常工作。</p>
-    <p>字体测试：若“ <span style="font-family: 'Shobhika'; font-weight: 900;">ष्र्र प्ल्र ट्ढ्र</span>
-        ”字符<strong>均</strong>呈现“左右并列”结构（如<span
-            style="font-family: Arial, Helvetica, sans-serif;">ष्र्र、प्ल्र、ट्ढ्र</span>）而非“上下堆叠”结构，则<span
-            class="emphasis">Shobhika</span>字体未加载或加载失败。若在线使用，请先稍等片刻或刷新页面，等待字体加载完成。</p>
-    <hr>
+    <p>设备须支持天城文显示。各大主流电子设备、浏览器均支持天城文显示。</p>
+    <p>天城文（<span class="Shobhika">देवनागरी</span>, devanāgarī），又称“天城体”，是一种元音附标文字，常用于印度教、印度佛教及尼泊尔佛教，是众多的婆罗米系列字母中流传最为广泛最为强势的字母，用来拼写印地语、梵语、尼泊尔语等语言。</p>
     <div class="container">
         <div class="content_1">
-            <h2>页面色调切换</h2>
-            <button title="切换色调" onclick="changeSkin();">切换页面色调</button>
-            <h2>读音查询</h2>
-            <p>经TEBOS的部分算法加密后的密文是可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
-                    href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
-            <p>该网站能将IAST文本与天城文相互转换。试试将 <strong><span
-                        class="Shobhika">ट्रौम्लौठ्रेङ्न्रुट्रौर्क्नाट्रौम्लौट्रोङ्घ्रीभ्र्रोङ्घोर्ल्र्रुर्ट्षाध्र्रौठ्ल्री</span></strong>
-                解密后转换为IAST!</p>
+            <h1>解密 - Decrypt</h1>
+            <textarea title="解密 - Decrypt" id="decoding" class="sanskrit input"></textarea>
+            <h1>明文 - Plaintext</h1>
+            <button title="复制" onclick="copyPlaintext();" style="float: right;">复制明文</button>
+            <textarea title="明文 - Plaintext" id="plaintext" class="results plain" readonly></textarea>
         </div>
         <hr>
+        <div class="content_1">
+            <h1>加密 - Encrypt</h1>
+            <textarea title="加密 - Encrypt" id="encoding" class="plain input"></textarea>
+            <h1>密文 - Cipher</h1>
+            <button title="复制" onclick="copyCipher();" style="float: right;">复制密文</button>
+            <textarea title="密文 - Cipher" id="cipher" class="results sanskrit" readonly></textarea>
+        </div>
+    </div>
+    <hr>
+    <div class="container">
         <div class="content_1">
             <h2>加密算法选择</h2>
             <form id="AlgorithmSelection">
@@ -824,26 +835,31 @@
                 <input type="radio" id="Algo_D32p8M" name="加密算法" value="Deva-D32p8M" />
                 <label for="Algo_D32p8M">Deva-D32p8M</label>
             </form>
-        </div>
-    </div>
-    <hr>
-    <div class="container">
-        <div class="content_1">
-            <h1>解密 - Decrypt</h1>
-            <textarea title="解密 - Decrypt" id="decoding" class="sanskrit input"></textarea>
-            <h1>明文 - Plaintext</h1>
-            <button title="复制" onclick="copyPlaintext();" style="float: right;">复制明文</button>
-            <textarea title="明文 - Plaintext" id="plaintext" class="results plain" readonly></textarea>
+            <h2>访问Wiki</h2>
+            <p>欲详细了解加密逻辑，请参照<a href="https://github.com/QuartzQuincy2019/TEBOS/wiki">本项目Wiki</a>。</p>
         </div>
         <hr>
         <div class="content_1">
-            <h1>加密 - Encrypt</h1>
-            <textarea title="加密 - Encrypt" id="encoding" class="plain input"></textarea>
-            <h1>密文 - Cipher</h1>
-            <button title="复制" onclick="copyCipher();" style="float: right;">复制密文</button>
-            <textarea title="密文 - Cipher" id="cipher" class="results sanskrit" readonly></textarea>
+            <h2>页面色调切换</h2>
+            <button title="切换色调" onclick="changeSkin();">切换页面色调</button>
+            <h2>读音查询</h2>
+            <p>经TEBOS的部分算法加密后的密文是可读的。可前往<a title="Sanskrit Transliteration Tool" target="_blank"
+                    href="https://www.yesvedanta.com/transliterate/">梵语转写工具网站</a>，参考"IAST"栏来查询密文的读音。</p>
+            <p>该网站能将IAST文本与天城文相互转换。试试将 <strong><span
+                        class="Shobhika">ट्रौम्लौठ्रेङ्न्रुट्रौर्क्नाट्रौम्लौट्रोङ्घ्रीभ्र्रोङ्घोर्ल्र्रुर्ट्षाध्र्रौठ्ल्री</span></strong>
+                解密后再转换为天城文会发生什么。</p>
         </div>
     </div>
+    <h2>字体适配性说明</h2>
+    <p>项目默认配备了<span class="emphasis">Shobhika</span>字体，以支持大量天城文叠字显示。在线使用、下载到计算机均可正常使用该字体。若下载到手机，则该字体将无法正常工作。</p>
+    <p class="BoldRed">Shobhika字体的工作与加密、解密功能互不影响，Shobhika字体仅起到美化密文的作用。</p>
+    <p></p>
+    <p>字体测试：若“ <span style="font-family: 'Shobhika'; font-weight: 900;">ष्र्र प्ल्र ट्ढ्र</span>
+        ”字符<strong>均</strong>呈现“左右并列”结构（如<span
+            style="font-family: Arial, Helvetica, sans-serif;">ष्र्र、प्ल्र、ट्ढ्र</span>）而非“上下堆叠”结构，则<span
+            class="emphasis">Shobhika</span>字体未加载或加载失败。若在线使用，请先稍等片刻或刷新页面，等待字体加载完成。
+    </p>
+    <hr>
     <h2>各算法比较</h2>
     <div class="table-container">
         <table>
